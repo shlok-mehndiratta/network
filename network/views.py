@@ -78,3 +78,20 @@ def new_post(request):
             return JsonResponse({"error": "Content cannot be empty."}, status=400)
     else:
         return JsonResponse({"error": "Only POST method is allowed."}, status=405)
+    
+
+def posts(request):
+    if request.method == "GET":
+        posts = Post.objects.all().order_by("-timestamp")
+        posts_data = []
+        for post in posts:
+            posts_data.append({
+                "id": post.id,
+                "user": post.user.username,
+                "content": post.content,
+                "timestamp": post.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "likes_count": post.likes.count(),
+            })
+        return JsonResponse(posts_data, safe=False)
+    else:
+        return JsonResponse({"error": "GET request required."}, status=400)

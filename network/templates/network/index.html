@@ -6,14 +6,15 @@
 {% endblock %}
 
 {% block body %}
-<div>
+<div class="index-container">
 <form class="new-post container-fluid" method="post">
     {% csrf_token %}
     <h2 class="mt-0">New Post</h2>
     <textarea name="new-post-content" class="new-post-content mx-4 px-2" id="" placeholder="Share Your thoughts here..."></textarea>
-    <button class="new-post-submit btn btn-primary" type="submit" disabled>Post</button>
+    <button class="new-post-submit btn btn-primary" type="submit" disabled>⌲ Post</button>
 </form>
 
+<div class="posts container-fluid mb-3"></div>
 
 </div>
 {% endblock %}

@@ -10,9 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
     });
 
-    // Additional event listeners can be added here
-});
-   
+    // All posts page to view all posts
+    document.querySelector("#all-posts").addEventListener("click", view_posts);
+    view_posts();
+});   
  
 
 function newPost(event) {
@@ -23,7 +24,16 @@ function newPost(event) {
         method: "POST",
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            return response.json();
+        } else {
+            // Probably got redirected to login page (HTML)
+            window.location.href = "/login/?next=/new-post";
+            throw new Error("Not authenticated");
+        }
+    })
     .then(data => {
         if (data.success) {
             // Handle successful post creation
@@ -34,5 +44,40 @@ function newPost(event) {
             // Handle errors
             alert(data.error || "An error occurred while creating the post.");
         }
-    });
+    })
+};
+
+function view_posts(event) {
+    fetch('/posts')
+    .then((response) => response.json())  // gets the list of all the posts and its details
+    .then((posts) => {
+        console.log("fetched successfully")
+        posts.forEach((post) => {
+
+            const postcontent = document.createElement('div');
+            postcontent.className = 'card border-dark mb-2';
+            postcontent.innerHTML = `
+            <div class="card-body">
+                <figcaption class="blockquote-header mb-2 ">
+                    <cite title="username">${post.user}</cite>
+                    <span class="card-text float-right"><small class="text-body-secondary">${post.timestamp}</small></span>
+                </figcaption>
+                <figure>
+                <p class="card-text">${post.content}</p>        
+                </figure>
+                <p class="card-text">
+                    <span>
+                        <img class="like-btn" src="/static/network/svg/heart.svg" alt="Like">${post.likes_count}
+                        <img class="like-btn ml-2" src="static/network/svg/red-heart.svg" alt="Liked">21
+                        <img class="like-btn ml-2" src="/static/network/svg/comment.svg" alt="comment">
+                    </span>
+                </p>
+            </div>
+            `
+            // Appends data to posts div
+            document.querySelector('.posts').append(postcontent);
+
+        });
+    })
+    
 }
