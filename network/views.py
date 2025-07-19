@@ -1,10 +1,12 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User
+from .models import User, Post
+import json
 
 
 def index(request):
@@ -61,3 +63,18 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+
+@login_required
+def new_post(request):
+    if request.method == "POST":
+        user = request.user
+        content = request.POST["new-post-content"]
+        if content:
+            post = Post(user=user, content=content) 
+            post.save()
+            return JsonResponse({"success": True}, status=201)
+        else:
+            return JsonResponse({"error": "Content cannot be empty."}, status=400)
+    else:
+        return JsonResponse({"error": "Only POST method is allowed."}, status=405)
