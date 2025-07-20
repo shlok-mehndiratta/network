@@ -8,7 +8,7 @@
     align-items: center;
 }
 
-.new-post {
+/* .new-post {
     width: 100%;
     max-width: 1000px;
     display: flex;
@@ -38,7 +38,7 @@
 
 .new-post button {
     align-self: flex-end;
-}
+} */
 
 .like-btn {
     background-color: transparent;
@@ -52,4 +52,18 @@
 
 .like-btn:hover {
     color: #333;
+}
+.new-post textarea::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+.new-post button:disabled {
+    background-color: #a6c8ff;
+    border-color: #a6c8ff;
+    cursor: not-allowed;
+}
+
+.new-post button:enabled:hover {
+    background-color: #0056b3;
 }

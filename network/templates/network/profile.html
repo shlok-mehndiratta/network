@@ -1,0 +1,65 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block script %}
+<script src="{% static 'network/index.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    
+    <div class="d-flex align-items-center m-1">
+        <a href="{% url 'index' %}" class="me-2">
+            <img class="pl-2 mr-3" style="width: 35px;" src="{% static 'network/assets/icons/back.png' %}" alt="Back">
+        </a>
+        <div class="d-flex flex-column">
+            <div class="fw-bold">Name</div>
+            <div class="text-muted" style="font-size: 0.9rem;">253 Posts</div>
+        </div>
+    </div>
+    <hr>
+
+    <div class="d-flex flex-row mb-2 w-100 h-50">
+       <img src="{% static 'network/assets/user.jpeg' %}" class="rounded-circle w-25 p-4 mr-5 float-start " alt="...">
+       
+       <div class="d-flex flex-column ml-5 mt-3 pl-2 w-100">
+            <h3 class="mb-0">Name</h3>
+            <div class="mb-1">@Username</div>
+            <div class="follow-btn mb-4">
+                <button class="btn btn-primary" type="button">Follow</button>
+                <button class="btn btn-outline-primary" type="button">Following</button>
+            </div>
+            <div class="d-flex flex-row mb-4">
+                <div class="pr-3 mr-3">1 Followers </div>
+                <div class="pr-3 mr-3">2 Following </div>
+            </div>
+            <div class="mb-2 flex-grow-1">
+                this is the description added by user
+            </div>
+        </div>
+         <div class="d-grid gap-2 justify-content-md-end">
+                <button class="btn btn-outline-secondary" type="button">Edit</button>
+        </div>
+    </div>   
+    <hr>
+    <h2>My Posts</h2>
+    <div class="my-posts">
+
+    </div>
+
+</div>
+{% endblock %}
+
+
+
+
+
+<!-- 
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+</form>
+
+<img src="{{ user.profile_picture.url }}" alt="Profile Picture"> -->

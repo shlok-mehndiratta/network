@@ -59,6 +59,7 @@ function view_posts(event) {
             postcontent.innerHTML = `
             <div class="card-body">
                 <figcaption class="blockquote-header mb-2 ">
+                    <img src="/static/network/assets/user.jpeg" alt="User" class="rounded-circle me-2" style="width: 35px; height: 35px;">
                     <cite title="username">${post.user}</cite>
                     <span class="card-text float-right"><small class="text-body-secondary">${post.timestamp}</small></span>
                 </figcaption>
@@ -67,9 +68,12 @@ function view_posts(event) {
                 </figure>
                 <p class="card-text">
                     <span>
-                        <img class="like-btn" src="/static/network/svg/heart.svg" alt="Like">${post.likes_count}
-                        <img class="like-btn ml-2" src="static/network/svg/red-heart.svg" alt="Liked">21
-                        <img class="like-btn ml-2" src="/static/network/svg/comment.svg" alt="comment">
+                        ${!post.liked_by_user 
+                            ? '<img class="like-btn" src="/static/network/assets/icons/heart.svg" alt="Like">'
+                            : '<img class="like-btn ml-4" src="static/network/assets/icons/red-heart.svg" alt="Liked"></img>'
+                        }
+                        ${post.likes_count}
+                        <img class="like-btn ml-5" src="/static/network/assets/icons/comment.svg" alt="comment">
                     </span>
                 </p>
             </div>
@@ -79,5 +83,4 @@ function view_posts(event) {
 
         });
     })
-    
 }

@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from .models import User, Post
 import json
+from .forms import ProfileForm
 
 
 def index(request):
@@ -91,7 +92,19 @@ def posts(request):
                 "content": post.content,
                 "timestamp": post.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                 "likes_count": post.likes.count(),
+                "liked_by_user": post.likes.filter(id=request.user.id).exists() if request.user.is_authenticated else False
             })
         return JsonResponse(posts_data, safe=False)
     else:
         return JsonResponse({"error": "GET request required."}, status=400)
+    
+
+def profile(request):
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            # Redirect or render success
+    else:
+        form = ProfileForm(instance=request.user)
+    return render(request, 'network/profile.html', {'form': form})
