@@ -41,6 +41,12 @@ def logout_view(request):
 
 def register(request):
     if request.method == "POST":
+        fullname = request.POST["fullname"]
+        if not fullname:
+            return render(request, "network/register.html", {
+                "message": "Full name is required."
+            })
+        first_name, last_name = fullname.split(" ", 1) if " " in fullname else (fullname, "")
         username = request.POST["username"]
         email = request.POST["email"]
 
@@ -54,7 +60,7 @@ def register(request):
 
         # Attempt to create new user
         try:
-            user = User.objects.create_user(username, email, password)
+            user = User.objects.create_user(username, email, password, first_name=first_name, last_name=last_name)
             user.save()
         except IntegrityError:
             return render(request, "network/register.html", {
@@ -81,14 +87,25 @@ def new_post(request):
         return JsonResponse({"error": "Only POST method is allowed."}, status=405)
     
 
-def posts(request):
+def posts(request, profile_name):
     if request.method == "GET":
-        posts = Post.objects.all().order_by("-timestamp")
+        try:
+            if profile_name == "all":
+                all_posts = Post.objects.all().order_by("-timestamp")
+            else:
+                all_posts = Post.objects.filter(user__username=profile_name).order_by("-timestamp")
+                if not all_posts:
+                    return JsonResponse({"error": "No posts found for this user."}, status=404) 
+
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User not found."}, status=404)
+
         posts_data = []
-        for post in posts:
+        for post in all_posts:
             posts_data.append({
                 "id": post.id,
-                "user": post.user.username,
+                "name": post.user.first_name + " " + post.user.last_name,
+                "username": post.user.username,
                 "content": post.content,
                 "timestamp": post.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                 "likes_count": post.likes.count(),
@@ -99,12 +116,19 @@ def posts(request):
         return JsonResponse({"error": "GET request required."}, status=400)
     
 
-def profile(request):
+def profile(request, username):
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
             # Redirect or render success
     else:
-        form = ProfileForm(instance=request.user)
-    return render(request, 'network/profile.html', {'form': form})
+        try:
+            data = User.objects.get(username=username)
+            return render(request, 'network/profile.html', {
+                'form': ProfileForm(instance=data),
+                'user': data
+            })
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User not found."}, status=404)
+   

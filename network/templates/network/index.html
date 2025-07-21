@@ -2,7 +2,8 @@
 {% load static %}
 
 {% block script %}
-<script src="{% static 'network/index.js' %}"></script>
+<script src="{% static 'network/js/index.js' %}"></script>
+<script>const currentUsername = "{{ request.user.username }}";</script>
 {% endblock %}
 
 {% block body %}
@@ -24,7 +25,7 @@
 
 
 <div class="posts container-fluid mb-3">
-
+    <h3 class="mb-2">All Posts</h3>
 </div>
 
 </div>
