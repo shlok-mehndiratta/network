@@ -13,6 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });   
 
 function follow(bool) {
+    if (isAuthenticated !== "true") {
+        const currentUrl = window.location.pathname + window.location.search;
+        window.location.href = `/login?next=${encodeURIComponent(currentUrl)}`;
+        return;
+    }
     fetch('/edit-profile', {
         method: "PUT" ,
         headers: {

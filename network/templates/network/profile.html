@@ -4,7 +4,8 @@
 {% block script %}
 <script src="{% static 'network/js/profile.js' %}"></script>
 <script>const currentUsername = "{{ request.user.username }}";
-    const profile_name = "{{user.username}}";
+    const profile_name = "{{profileuser.username}}";
+    const isAuthenticated = "{{ request.user.is_authenticated|yesno:'true,false'}}";
 </script>
 {% endblock %}
 
@@ -16,8 +17,8 @@
             <img class="pl-2 mr-3" style="width: 35px;" src="{% static 'network/assets/icons/back.png' %}" alt="Back">
         </a>
         <div class="d-flex flex-column">
-            <div class="fw-bold"><b>{{user.first_name}}</b></div>
-            <div class="text-muted" style="font-size: 0.9rem;">{{user.posts.count}} Posts</div>
+            <div class="fw-bold"><b>{{profileuser.first_name}}</b></div>
+            <div class="text-muted" style="font-size: 0.9rem;">{{profileuser.posts.count}} Posts</div>
         </div>
     </div>
     <hr>
@@ -26,11 +27,11 @@
        <img src="{% static 'network/assets/user.jpeg' %}" class="rounded-circle w-25 p-4 mr-5 float-start " alt="...">
        
        <div class="d-flex flex-column ml-5 mt-3 pl-2 w-100">
-            <h3 class="mb-0"><b>{{user.first_name}} {{user.last_name}}</b></h3>
-            <div class="mb-2">@{{user.username}}</div>
+            <h3 class="mb-0"><b>{{profileuser.first_name}} {{profileuser.last_name}}</b></h3>
+            <div class="mb-2">@{{profileuser.username}}</div>
             <div class="mb-4">
-                {% if request.user != user %}
-                    {% if user not in request.user.following.all %} 
+                {% if request.user != profileuser %}
+                    {% if profileuser not in request.user.following.all or not user.is_authenticated %} 
                 <button class="btn btn-primary" id="follow" type="button">Follow</button>
                     {% else %}
                 <button class="btn btn-outline-primary" id="unfollow" type="button">Following</button>
@@ -38,21 +39,21 @@
                 {% endif %}
             </div>
             <div class="d-flex flex-row mb-4">
-                <div class="pr-3 mr-3"><b>{{user.followers_count}}</b> Followers </div>
-                <div class="pr-3 mr-3"><b>{{user.following.count}}</b> Following </div>
+                <div class="pr-3 mr-3"><b>{{profileuser.followers_count}}</b> Followers </div>
+                <div class="pr-3 mr-3"><b>{{profileuser.following.count}}</b> Following </div>
             </div>
             <div class="mb-2 flex-grow-1">
-                {{user.bio|default:"No bio" }}
+                {{profileuser.bio|default:"No bio" }}
             </div>
         </div>
-        {% if request.user == user %}
+        {% if request.user == profileuser %}
          <div class="d-grid gap-2 justify-content-md-end">
                 <button class="btn btn-outline-secondary" type="button">Edit</button>
         </div>
         {% endif %}
     </div>   
     <hr>
-    <h3>{{user.first_name}}'s Posts</h3>
+    <h3>{{profileuser.first_name}}'s Posts</h3>
     <div class="posts">
 
     </div>

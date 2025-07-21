@@ -127,7 +127,7 @@ def profile(request, username):
             data = User.objects.get(username=username)
             return render(request, 'network/profile.html', {
                 'form': ProfileForm(instance=data),
-                'user': data
+                'profileuser': data
             })
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found."}, status=404)

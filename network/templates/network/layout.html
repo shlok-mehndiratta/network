@@ -20,7 +20,7 @@
               <ul class="navbar-nav mr-auto">
                 {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" id="profile" href="{% url 'profile' username=user.username %}"><strong>{{ user.first_name }}</strong></a>
+                        <a class="nav-link" id="profile" href="{% url 'profile' username=user.username %}"><strong>{{ request.user.first_name }}</strong></a>
                     </li>
                 {% endif %}
                 <li class="nav-item">
@@ -35,7 +35,7 @@
                     </li>
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Log In</a>
+                        <a class="nav-link" href="{% url 'login' %}?next={{ request.path }}">Log In</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'register' %}">Register</a>
