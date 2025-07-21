@@ -97,8 +97,8 @@ def posts(request, profile_name):
                 if not all_posts:
                     return JsonResponse({"error": "No posts found for this user."}, status=404) 
 
-        except User.DoesNotExist:
-            return JsonResponse({"error": "User not found."}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
 
         posts_data = []
         for post in all_posts:
@@ -131,4 +131,33 @@ def profile(request, username):
             })
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found."}, status=404)
+
+@login_required
+def edit_profile(request):
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        user = request.user
+        
+        if 'profile_picture' in data:
+            user.profile_picture = data['profile_picture']
+        
+        if 'bio' in data:
+            user.bio = data['bio']
+
+        if 'follow' in data:
+            if data['follow']:
+                user.following.add(User.objects.get(username=data['following']))
+            else:
+                user.following.remove(User.objects.get(username=data['following']))
+
+            # update followers count for the other user
+            data['following'] = User.objects.get(username=data['following'])
+            followers_count = data['following'].followers_count + 1 if data['follow'] else data['following'].followers_count - 1
+            data['following'].followers_count = followers_count
+            data['following'].save()
+    
+        
+        user.save()
+    
+        return JsonResponse({"message": "Profile updated successfully."}, status=200)
    

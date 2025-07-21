@@ -13,5 +13,5 @@ urlpatterns = [
     # API Endpoints
     path("new-post", views.new_post, name="new_post"),
     path("posts/<str:profile_name>", views.posts, name="posts"),
-
+    path("edit-profile", views.edit_profile, name="edit_profile"),
 ]
