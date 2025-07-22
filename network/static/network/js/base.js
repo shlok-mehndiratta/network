@@ -1,7 +1,27 @@
 document.addEventListener("DOMContentLoaded", function() {
+    const path = window.location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+
+    // 1. Check if it's a profile page first
+    if (path.startsWith('/profile/')) {
+        view_posts(profile_name); 
+    } 
+    // 2. If not a profile page, check for the 'following' view parameter
+    else if (view === 'following') {
+        view_posts('following');
+    } 
+    // 3. Otherwise, default to the 'all' posts view
+    else {
+        view_posts('all');
+    }
+
     // All posts page to view all posts
     document.querySelector("#all-posts").addEventListener("click", () => view_posts('all'));
-    document.querySelector("#profile").addEventListener("click", () => view_posts(profile_name));
+    // document.querySelector("#profile").addEventListener("click", () => view_posts(profile_name));
+    document.querySelector("#following").addEventListener("click", () => view_posts('following'));
+
+    
 }); 
 
 
@@ -10,6 +30,18 @@ function view_posts(profile_name) {
     .then((response) => response.json())  // gets the list of all the posts and its details
     .then((data) => {
         console.log(profile_name)
+
+        const heading = document.createElement('h3');
+        heading.className = 'mb-2'
+        heading.innerHTML = `${profile_name=='following' ? 'Your Following' : 'All Posts' }`
+
+        const postsHeader = document.querySelector('.posts-header');
+        // Then, check if the element was actually found.
+        if (postsHeader) {
+            postsHeader.append(heading)
+        } 
+
+        document.querySelector('.posts').innerHTML = '';
         data.forEach((post) => {
 
             const postcontent = document.createElement('div');
@@ -38,13 +70,9 @@ function view_posts(profile_name) {
                 </p>
             </div>
             `
-            // Appends data to posts div
-            // if (`${posts}` == 'all-posts') {
-            document.querySelector('.posts').append(postcontent);
-            // } else if  (`${posts}` == 'my-posts') {
-            //     document.querySelector('.my_posts').append(postcontent);
-            // // };
 
+            document.querySelector('.posts').append(postcontent);
+    
         });
     })
 }

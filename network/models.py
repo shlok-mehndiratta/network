@@ -22,3 +22,15 @@ class Post(models.Model):
 
     def __str__(self):
         return f"{self.user.username}: {self.content[:20]}..."
+    
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.user.first_name + " " + self.user.last_name,
+            "username": self.user.username,
+            "content": self.content,
+            "timestamp": self.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "likes_count": self.likes.count(),
+            "liked_by_user": self.likes.filter(id=self.user.id).exists()
+        }
+

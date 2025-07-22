@@ -92,6 +92,9 @@ def posts(request, profile_name):
         try:
             if profile_name == "all":
                 all_posts = Post.objects.all().order_by("-timestamp")
+            elif profile_name == "following":
+                following_users = request.user.following.all()
+                all_posts = Post.objects.filter(user__in=following_users).order_by("-timestamp")
             else:
                 all_posts = Post.objects.filter(user__username=profile_name).order_by("-timestamp")
                 if not all_posts:
@@ -103,13 +106,11 @@ def posts(request, profile_name):
         posts_data = []
         for post in all_posts:
             posts_data.append({
-                "id": post.id,
-                "name": post.user.first_name + " " + post.user.last_name,
-                "username": post.user.username,
-                "content": post.content,
-                "timestamp": post.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                "likes_count": post.likes.count(),
-                "liked_by_user": post.likes.filter(id=request.user.id).exists() if request.user.is_authenticated else False
+                **post.serialize(), 
+                "profile_picture": post.user.profile_picture.url if post.user.profile_picture else None,
+                "bio": post.user.bio,
+                "followers_count": post.user.followers_count,
+                "following_count": post.user.following.count(),
             })
         return JsonResponse(posts_data, safe=False)
     else:
@@ -160,4 +161,19 @@ def edit_profile(request):
         user.save()
     
         return JsonResponse({"message": "Profile updated successfully."}, status=200)
-   
+
+
+# @login_required
+# def following(request):
+#     following_users = request.user.following.all()
+#     following_posts = Post.objects.filter(user__in=following_users).order_by("-timestamp")
+#     posts_data = []
+
+#     for post in following_posts:
+#          posts_data.append({
+#                 **post.serialize(), 
+#                 "profile_picture": post.user.profile_picture.url if post.user.profile_picture else None,
+#                 "bio": post.user.bio,
+#                 "followers_count": post.user.followers_count,
+#                 "following_count": post.user.following.count(),
+#             })

@@ -11,10 +11,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
         });
     }
-
-    // view profile page of individual  user
-    document.querySelectorAll(".profile").forEach(element => {element.addEventListener("click", () => view_posts('my-posts'))});
-    view_posts('all');
+    
 });   
  
 
