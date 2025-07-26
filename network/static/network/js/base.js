@@ -27,52 +27,103 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function view_posts(profile_name) {
     fetch(`/posts/${profile_name}`)
-    .then((response) => response.json())  // gets the list of all the posts and its details
+    .then((response) => response.json())
     .then((data) => {
-        console.log(profile_name)
-
-        const heading = document.createElement('h3');
-        heading.className = 'mb-2'
-        heading.innerHTML = `${profile_name=='following' ? 'Your Following' : 'All Posts' }`
-
+        // Clear previous content
+        const postsContainer = document.querySelector('.posts');
+        postsContainer.innerHTML = '';
         const postsHeader = document.querySelector('.posts-header');
-        // Then, check if the element was actually found.
-        if (postsHeader) {
-            postsHeader.append(heading)
-        } 
+        if (postsHeader){
+            postsHeader.innerHTML = '';
 
-        document.querySelector('.posts').innerHTML = '';
+            // Add a heading (optional but good practice)
+            const heading = document.createElement('h3');
+            heading.className = 'mb-2';
+            if (profile_name === 'all') {
+                heading.innerHTML = 'All Posts';
+            } else if (profile_name === 'following') {
+                heading.innerHTML = 'Following';
+            }
+            postsHeader.append(heading);
+        }
+
+        if (data && data.length > 0) {
         data.forEach((post) => {
-
-            const postcontent = document.createElement('div');
-            postcontent.className = 'card border-dark mb-2';
-            postcontent.innerHTML = `
+            const postElement = document.createElement('div');
+            postElement.className = 'card border-dark mb-2';
+            postElement.innerHTML = `
             <div class="card-body">
                 <figcaption class="blockquote-header mb-2">
                     <img src="/static/network/assets/user.jpeg" alt="User" class="rounded-circle me-2" style="width: 35px; height: 35px;">
-                    <a title="name" href="/profile/${post.username}" class="profile" class="pl-2 pr-1"><b>${post.name}</b></a> 
+                    <a href="/profile/${post.username}" class="profile"><b>${post.name}</b></a>
                     <cite title="username">(${post.username})</cite>
                     <span class="card-text float-right"><small class="text-body-secondary">${post.timestamp}</small></span>
-                    ${post.username == currentUsername ? '<button class="edit btn btn-outline-primary px-1 py-0 mx-2 float-right">✎</button>' : '' }
-                </figcaption> 
+                    ${post.username == currentUsername ? `<button class="edit btn btn-outline-primary px-1 py-0 mx-2 float-right">✎</button>` : ''}
+                </figcaption>
                 <figure>
-                <p class="card-text">${post.content}</p>        
+                    <p class="card-text">${post.content}</p>
                 </figure>
                 <p class="card-text">
-                    <span>
-                        ${!post.liked_by_user 
-                            ? '<img class="like-btn" src="/static/network/assets/icons/heart.svg" alt="Like">'
-                            : '<img class="like-btn ml-4" src="static/network/assets/icons/red-heart.svg" alt="Liked"></img>'
-                        }
-                        ${post.likes_count}
-                        <img class="like-btn ml-5" src="/static/network/assets/icons/comment.svg" alt="comment">
+                    <span class="like-section">
+                        <img class="like-btn" 
+                             src="${post.liked_by_user ? '/static/network/assets/icons/red-heart.svg' : '/static/network/assets/icons/heart.svg'}" 
+                             alt="${post.liked_by_user ? 'Liked' : 'Like'}" 
+                             style="cursor: pointer;">
+                        <span class="likes-count">${post.likes_count}</span>
                     </span>
+                    <img class="comment-btn ml-4" src="/static/network/assets/icons/comment.svg" alt="comment">
                 </p>
             </div>
-            `
+            `;
+            
+            // Add event listener for the like button
+            const likeBtn = postElement.querySelector('.like-btn');
+            likeBtn.addEventListener('click', () => {
+                fetch(`/edit-post/${post.id}`, {
+                    method: 'PUT',
+                    headers: { 'X-CSRFToken': getCSRFToken() } // Assuming getCSRFToken() exists from your profile.js
+                })
+                .then(response => response.json())
+                .then(result => {
+                    // Update the like button and count without reloading
+                    const likesCountSpan = postElement.querySelector('.likes-count');
+                    likesCountSpan.innerText = result.likes_count;
+                    if (result.liked) {
+                        likeBtn.src = '/static/network/assets/icons/red-heart.svg';
+                        likeBtn.alt = 'Liked';
+                    } else {
+                        likeBtn.src = '/static/network/assets/icons/heart.svg';
+                        likeBtn.alt = 'Like';
+                    }
+                });
+            });
 
-            document.querySelector('.posts').append(postcontent);
-    
+            postsContainer.append(postElement);
         });
-    })
+
+  
+
+    } else {
+         // If the data array is empty, display the "No Posts" message.
+        const noPostsMessage = document.createElement('div');
+        noPostsMessage.className = 'text-center text-muted p-5';
+        noPostsMessage.innerHTML = `<h3>No Posts Found</h3>`;
+        postsContainer.append(noPostsMessage);
+    }
+    });
+}
+
+
+// Helper to extract CSRF token from cookies (required for Django PUT/POST/DELETE)
+
+function getCSRFToken() {
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+            return decodeURIComponent(cookie.substring(name.length + 1));
+        }
+    }
+    return '';
 }

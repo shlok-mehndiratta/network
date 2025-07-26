@@ -40,7 +40,7 @@
     align-self: flex-end;
 } */
 
-.like-btn {
+.like-btn , .comment-btn{
     background-color: transparent;
     border: none;
     cursor: pointer;

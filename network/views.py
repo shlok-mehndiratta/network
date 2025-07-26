@@ -6,11 +6,14 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from .models import User, Post
+from django.db.models import F
 import json
 from .forms import ProfileForm
+from django.core.paginator import Paginator
 
 
 def index(request):
+    
     return render(request, "network/index.html")
 
 
@@ -93,26 +96,21 @@ def posts(request, profile_name):
             if profile_name == "all":
                 all_posts = Post.objects.all().order_by("-timestamp")
             elif profile_name == "following":
+                # Ensure user is logged in to see following feed
+                if not request.user.is_authenticated:
+                    return JsonResponse({"error": "User not authenticated"}, status=403)
                 following_users = request.user.following.all()
                 all_posts = Post.objects.filter(user__in=following_users).order_by("-timestamp")
             else:
                 all_posts = Post.objects.filter(user__username=profile_name).order_by("-timestamp")
-                if not all_posts:
-                    return JsonResponse({"error": "No posts found for this user."}, status=404) 
+            
+            # Now we pass request.user to serialize to check for likes correctly
+            posts_data = [post.serialize(request.user) for post in all_posts]
+            
+            return JsonResponse(posts_data, safe=False)
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
-
-        posts_data = []
-        for post in all_posts:
-            posts_data.append({
-                **post.serialize(), 
-                "profile_picture": post.user.profile_picture.url if post.user.profile_picture else None,
-                "bio": post.user.bio,
-                "followers_count": post.user.followers_count,
-                "following_count": post.user.following.count(),
-            })
-        return JsonResponse(posts_data, safe=False)
     else:
         return JsonResponse({"error": "GET request required."}, status=400)
     
@@ -137,43 +135,41 @@ def profile(request, username):
 def edit_profile(request):
     if request.method == 'PUT':
         data = json.loads(request.body)
-        user = request.user
+        user_to_modify = User.objects.get(username=data['following'])
         
-        if 'profile_picture' in data:
-            user.profile_picture = data['profile_picture']
-        
-        if 'bio' in data:
-            user.bio = data['bio']
-
-        if 'follow' in data:
-            if data['follow']:
-                user.following.add(User.objects.get(username=data['following']))
+        # Simplified follow/unfollow logic
+        if data['follow']:
+            request.user.following.add(user_to_modify)
+        else:
+            request.user.following.remove(user_to_modify)
+            
+        return JsonResponse({"message": "Profile follow/unfollow updated successfully."}, status=200)
+    else:
+        return JsonResponse({"error": "PUT request required."}, status=400)
+    
+# view to handle liking/unliking posts
+@login_required
+def edit_post(request, post_id):
+    if request.method == "PUT":
+        try:
+            post = Post.objects.get(pk=post_id)
+            user = request.user
+            
+            # Toggle like status
+            if user in post.likes.all():
+                post.likes.remove(user)
+                liked = False
             else:
-                user.following.remove(User.objects.get(username=data['following']))
+                post.likes.add(user)
+                liked = True
 
-            # update followers count for the other user
-            data['following'] = User.objects.get(username=data['following'])
-            followers_count = data['following'].followers_count + 1 if data['follow'] else data['following'].followers_count - 1
-            data['following'].followers_count = followers_count
-            data['following'].save()
-    
-        
-        user.save()
-    
-        return JsonResponse({"message": "Profile updated successfully."}, status=200)
+            return JsonResponse({
+                "message": "Post updated successfully.",
+                "liked": liked,
+                "likes_count": post.likes.count()
+            }, status=200)
 
-
-# @login_required
-# def following(request):
-#     following_users = request.user.following.all()
-#     following_posts = Post.objects.filter(user__in=following_users).order_by("-timestamp")
-#     posts_data = []
-
-#     for post in following_posts:
-#          posts_data.append({
-#                 **post.serialize(), 
-#                 "profile_picture": post.user.profile_picture.url if post.user.profile_picture else None,
-#                 "bio": post.user.bio,
-#                 "followers_count": post.user.followers_count,
-#                 "following_count": post.user.following.count(),
-#             })
+        except Post.DoesNotExist:
+            return JsonResponse({"error": "Post not found."}, status=404)
+    else:
+        return JsonResponse({"error": "PUT request required."}, status=405)
