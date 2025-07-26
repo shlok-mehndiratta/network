@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function view_posts(profile_name, page = 1) {
     window.scrollTo(0, 0);
-    
+
     // Append the page number to the fetch request
     fetch(`/posts/${profile_name}?page=${page}`)
         .then(response => response.json())
@@ -57,10 +57,10 @@ function view_posts(profile_name, page = 1) {
                             <a href="/profile/${post.username}" class="profile"><b>${post.name}</b></a>
                             <cite title="username">(${post.username})</cite>
                             <span class="card-text float-right"><small class="text-body-secondary">${post.timestamp}</small></span>
-                            ${post.username == currentUsername ? `<button class="edit btn btn-outline-primary px-1 py-0 mx-2 float-right">✎</button>` : ''}
+                            ${post.username == currentUsername ? `<button class="edit-btn btn btn-outline-primary px-1 py-0 mx-2 float-right">✎</button>` : ''}
                         </figcaption>
                         <figure>
-                            <p class="card-text">${post.content}</p>
+                            <p class="card-text post-content-text">${post.content}</p>
                         </figure>
                         <p class="card-text">
                             <span class="like-section">
@@ -75,29 +75,101 @@ function view_posts(profile_name, page = 1) {
                     </div>
                     `;
                 
-                // Add event listener for the like button
-                const likeBtn = postElement.querySelector('.like-btn');
-                likeBtn.addEventListener('click', () => {
-                    fetch(`/edit-post/${post.id}`, {
-                        method: 'PUT',
-                        headers: { 'X-CSRFToken': getCSRFToken() } // Assuming getCSRFToken() exists from your profile.js
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        // Update the like button and count without reloading
-                        const likesCountSpan = postElement.querySelector('.likes-count');
-                        likesCountSpan.innerText = result.likes_count;
-                        if (result.liked) {
-                            likeBtn.src = '/static/network/assets/icons/red-heart.svg';
-                            likeBtn.alt = 'Liked';
-                        } else {
-                            likeBtn.src = '/static/network/assets/icons/heart.svg';
-                            likeBtn.alt = 'Like';
-                        }
-                    });
-                });
 
                 postsContainer.append(postElement);
+
+            
+                 // Add the event listener logic for the edit button
+                const editButton = postElement.querySelector('.edit-btn');
+                if (editButton) {
+                    editButton.addEventListener('click', () => {
+
+                        if (postElement.querySelector('.edit-container')) {
+                            return; 
+                        }
+
+                        const contentP = postElement.querySelector('.post-content-text');
+                        const currentContent = contentP.innerText;
+
+                        // Create the edit view elements
+                        const editContainer = document.createElement('div');
+                        editContainer.className = 'edit-container';
+                        editContainer.innerHTML = `
+                            <textarea class="form-control" rows="3">${currentContent}</textarea>
+                            <button class="btn btn-primary btn-sm mt-2 save-btn">Save</button>
+                        `;
+
+                        // Hide the original paragraph and show the edit view
+                        contentP.style.display = 'none';
+                        contentP.after(editContainer);
+
+                        // Add listener for the new "Save" button
+                        const saveButton = editContainer.querySelector('.save-btn');
+                        saveButton.addEventListener('click', () => {
+                            const newContent = editContainer.querySelector('textarea').value;
+
+                            fetch(`/edit-post/${post.id}`, {
+                                method: 'PUT',
+                                headers: { 'X-CSRFToken': getCSRFToken(), 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    content: newContent
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                // Update the original paragraph's content
+                                contentP.innerText = result.content;
+
+                                // Remove the edit view and show the updated paragraph
+                                editContainer.remove();
+                                contentP.style.display = 'block';
+                            });
+                        });
+                    });
+                }
+
+                const likeBtn = postElement.querySelector('.like-btn');
+                if (likeBtn) {
+                    likeBtn.addEventListener('click', () => {
+                        // This check is still good practice
+                        if (isAuthenticated !== "true") {
+                            window.location.href = '/login';
+                            return;
+                        }
+
+                        // Determine if the post is currently liked based on the image's alt text
+                        const isCurrentlyLiked = likeBtn.alt === 'Liked';
+                        
+                        // Correctly build the fetch request
+                        fetch(`/edit-post/${post.id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json', // Tell the server we're sending JSON
+                                'X-CSRFToken': getCSRFToken()
+                            },
+                            // Include the JSON data in the body
+                            body: JSON.stringify({
+                                liked: !isCurrentlyLiked // Send the opposite of the current state
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            // Update the UI based on the new state from the server
+                            const likesCountSpan = postElement.querySelector('.likes-count');
+                            likesCountSpan.innerText = result.likes_count ?? 0;
+
+                            if (result.liked) {
+                                likeBtn.src = '/static/network/assets/icons/red-heart.svg';
+                                likeBtn.alt = 'Liked';
+                            } else {
+                                likeBtn.src = '/static/network/assets/icons/heart.svg';
+                                likeBtn.alt = 'Like';
+                            }
+                        })
+                        .catch(error => console.error('Error liking post:', error));
+                    });
+                }
+
             });
 
     

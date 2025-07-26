@@ -164,29 +164,46 @@ def edit_profile(request):
     else:
         return JsonResponse({"error": "PUT request required."}, status=400)
     
-# view to handle liking/unliking posts
 @login_required
 def edit_post(request, post_id):
-    if request.method == "PUT":
-        try:
-            post = Post.objects.get(pk=post_id)
-            user = request.user
-            
-            # Toggle like status
-            if user in post.likes.all():
-                post.likes.remove(user)
-                liked = False
-            else:
-                post.likes.add(user)
-                liked = True
-
-            return JsonResponse({
-                "message": "Post updated successfully.",
-                "liked": liked,
-                "likes_count": post.likes.count()
-            }, status=200)
-
-        except Post.DoesNotExist:
-            return JsonResponse({"error": "Post not found."}, status=404)
-    else:
+    if request.method != "PUT":
         return JsonResponse({"error": "PUT request required."}, status=405)
+
+    try:
+        post = Post.objects.get(pk=post_id)
+    except Post.DoesNotExist:
+        return JsonResponse({"error": "Post not found."}, status=404)
+
+    data = json.loads(request.body)
+
+    # Check if 'content' is being updated
+    if 'content' in data:
+
+        # Ensure the user making the request is the one who owns the post.
+        if post.user != request.user:
+            return JsonResponse({"error": "You are not authorized to edit this post."}, status=403)
+
+        post.content = data['content']
+        post.save()
+        return JsonResponse({
+            "message": "Post updated successfully.",
+            "content": post.content
+        }, status=200)
+
+    # Check if a 'like' is being updated (your existing logic)
+    if 'liked' in data:
+        user = request.user
+        liked = data['liked']
+        
+        if liked:
+            post.likes.add(user)
+        else:
+            post.likes.remove(user)
+
+        return JsonResponse({
+            "message": "Like status updated.",
+            "liked": liked,
+            "likes_count": post.likes.count()
+        }, status=200)
+
+    return JsonResponse({"error": "No valid action specified."}, status=400)
