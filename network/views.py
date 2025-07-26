@@ -104,10 +104,27 @@ def posts(request, profile_name):
             else:
                 all_posts = Post.objects.filter(user__username=profile_name).order_by("-timestamp")
             
-            # Now we pass request.user to serialize to check for likes correctly
-            posts_data = [post.serialize(request.user) for post in all_posts]
-            
-            return JsonResponse(posts_data, safe=False)
+            # Get the desired page number from the request's query parameters (e.g., /posts/all?page=2)
+            # Default to page 1 if not provided.
+            page_number = request.GET.get("page", 1)
+
+            # Create a Paginator object with the queryset and set posts per page to 10.
+            paginator = Paginator(all_posts, 10)
+
+            # Get the specific page object. .get_page handles invalid page numbers gracefully.
+            page_obj = paginator.get_page(page_number)
+
+            # Serialize the posts from the current page object, not the whole queryset.
+            posts_data = [post.serialize(request.user) for post in page_obj]
+
+            # Return a JSON object containing posts and pagination metadata.
+            return JsonResponse({
+                "posts": posts_data,
+                "total_pages": paginator.num_pages,
+                "current_page": page_obj.number,
+                "has_next": page_obj.has_next(),
+                "has_previous": page_obj.has_previous()
+            }, safe=False)
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
