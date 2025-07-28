@@ -16,18 +16,23 @@
             <img class="pl-2 mr-3" style="width: 35px;" src="{% static 'network/assets/icons/back.png' %}" alt="Back">
         </a>
         <div class="d-flex flex-column">
-            <div class="fw-bold"><b>{{ profileuser.first_name }}</b></div>
+            <div class="fw-bold"><b id="profile-header-name">{{ profileuser.first_name }}</b></div>
             <div class="text-muted" style="font-size: 0.9rem;">{{ profileuser.posts.count }} Posts</div>
         </div>
     </div>
     <hr>
 
     <div class="d-flex flex-row mb-2 w-100 h-50">
-       <img src="{% static 'network/assets/user.jpeg' %}" class="rounded-circle w-25 p-4 mr-5 float-start " alt="...">
-       
+        
+        {% if profileuser.profile_picture %}
+            <img id="profile-pic-main" class="profile-pic rounded-circle w-25 p-4 mr-5 float-start" src="{{ profileuser.profile_picture.url }}" alt="{{ profileuser.username }}'s profile picture">
+        {% else %}
+            <img id="profile-pic-main" class="profile-pic rounded-circle w-25 p-4 mr-5 float-start" src="{% static 'network/assets/user.jpeg' %}" alt="Default profile picture">
+        {% endif %}
+
        <div class="d-flex flex-column ml-5 mt-3 pl-2 w-100">
-            <h3 class="mb-0"><b>{{ profileuser.first_name }} {{ profileuser.last_name }}</b></h3>
-            <div class="mb-2">@{{ profileuser.username }}</div>
+            <h3 id="profile-full-name" class="mb-0"><b>{{ profileuser.first_name }} {{ profileuser.last_name }}</b></h3>
+            <div id="profile-username" class="mb-2">@{{ profileuser.username }}</div>
             <div class="mb-4">
                 {% if request.user.is_authenticated and request.user != profileuser %}
                     {% if profileuser in request.user.following.all %}
@@ -41,13 +46,15 @@
                 <div class="pr-3 mr-3"><b id="follower-count">{{ profileuser.followers_count }}</b> Followers </div>
                 <div class="pr-3 mr-3"><b>{{ profileuser.following_count }}</b> Following </div>
             </div>
-            <div class="mb-2 flex-grow-1">
-                {{ profileuser.bio|default:"No bio" }}
+            <div id="profile-bio" class="mb-2 flex-grow-1">
+                {{ profileuser.bio|default:"No bio provided." }}
             </div>
        </div>
        {% if request.user == profileuser %}
         <div class="d-grid gap-2 justify-content-md-end">
-                <button class="btn btn-outline-secondary" type="button">Edit</button>
+                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#editProfileModal">
+                    Edit Profile
+                </button>
         </div>
        {% endif %}
     </div>   
@@ -61,4 +68,28 @@
     <div id="pagination-container" class="d-flex justify-content-center mt-4">
     </div>
 </div>
+
+<div class="modal fade" id="editProfileModal" tabindex="-1" role="dialog" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-profile-form" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-profile-changes">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

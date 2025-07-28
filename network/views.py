@@ -131,22 +131,39 @@ def posts(request, profile_name):
     else:
         return JsonResponse({"error": "GET request required."}, status=400)
     
-
 def profile(request, username):
-    if request.method == 'POST':
+    try:
+        profile_user = User.objects.get(username=username)
+        
+        # Create a form instance for the profile user
+        form = ProfileForm(instance=profile_user)
+
+        return render(request, 'network/profile.html', {
+            'profileuser': profile_user,
+            'form': form  # Pass the form to the template
+        })
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found."}, status=404)
+
+
+@login_required
+def update_profile(request):
+    if request.method == "POST":
         form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
-            # Redirect or render success
-    else:
-        try:
-            data = User.objects.get(username=username)
-            return render(request, 'network/profile.html', {
-                'form': ProfileForm(instance=data),
-                'profileuser': data
+            # MODIFY THIS RESPONSE to send back the new name and username
+            return JsonResponse({
+                "success": True,
+                "name": f"{request.user.first_name} {request.user.last_name}".strip(),
+                "username": request.user.username,
+                "bio": request.user.bio,
+                "profile_picture_url": request.user.profile_picture.url if request.user.profile_picture else None
             })
-        except User.DoesNotExist:
-            return JsonResponse({"error": "User not found."}, status=404)
+        else:
+            return JsonResponse({"success": False, "errors": form.errors})
+    return JsonResponse({"error": "Invalid request method."}, status=400)
+
 
 @login_required
 def edit_profile(request):
