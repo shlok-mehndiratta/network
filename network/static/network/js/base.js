@@ -53,7 +53,7 @@ function view_posts(profile_name, page = 1) {
                     postElement.innerHTML = `
                     <div class="card-body">
                         <figcaption class="blockquote-header mb-2">
-                            <img src="/static/network/assets/user.jpeg" alt="User" class="rounded-circle me-2" style="width: 35px; height: 35px;">
+                            <img src="${post.profile_picture_url}" alt="profile picture" class="rounded-circle me-2" style="width: 35px; height: 35px;">
                             <a href="/profile/${post.username}" class="profile"><b>${post.name}</b></a>
                             <cite title="username">(${post.username})</cite>
                             <span class="card-text float-right"><small class="text-body-secondary">${post.timestamp}</small></span>

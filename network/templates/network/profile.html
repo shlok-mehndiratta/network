@@ -24,11 +24,9 @@
 
     <div class="d-flex flex-row mb-2 w-100 h-50">
         
-        {% if profileuser.profile_picture %}
-            <img id="profile-pic-main" class="profile-pic rounded-circle w-25 p-4 mr-5 float-start" src="{{ profileuser.profile_picture.url }}" alt="{{ profileuser.username }}'s profile picture">
-        {% else %}
-            <img id="profile-pic-main" class="profile-pic rounded-circle w-25 p-4 mr-5 float-start" src="{% static 'network/assets/user.jpeg' %}" alt="Default profile picture">
-        {% endif %}
+        <div class="profile-pic-container mr-5">
+            <img id="profile-pic-main" class="profile-pic" src="{{ profileuser.profile_picture_url }}" alt="{{ profileuser.username }}'s profile picture">
+        </div>
 
        <div class="d-flex flex-column ml-5 mt-3 pl-2 w-100">
             <h3 id="profile-full-name" class="mb-0"><b>{{ profileuser.first_name }} {{ profileuser.last_name }}</b></h3>

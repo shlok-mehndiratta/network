@@ -43,10 +43,9 @@ function handleProfileUpdate(form, button) {
             document.querySelector('#profile-header-name').innerText = result.name.split(' ')[0]; // Show first name in header
             document.querySelector('#profile-username').innerText = `@${result.username}`; // Update username
             document.querySelector('#profile-bio').innerText = result.bio || "No bio provided.";
-            if (result.profile_picture_url) {
-                document.querySelectorAll('.profile-pic').forEach(img => img.src = result.profile_picture_url);
-            }
             
+            document.querySelectorAll('.profile-pic').forEach(img => img.src = result.profile_picture_url);
+
             view_posts(result.username, 1);
 
             $('#editProfileModal').modal('hide');
@@ -100,7 +99,70 @@ function clearErrors(form) {
     form.querySelectorAll('.is-invalid').forEach(field => field.classList.remove('is-invalid'));
 }
 
+/**
+ * Handles the follow/unfollow fetch request.
+ */
+function handleFollow() {
+    if (isAuthenticated !== "true") {
+        window.location.href = `/login?next=${window.location.pathname}`;
+        return;
+    }
 
-// --- Your other functions (handleFollow, getCSRFToken) go here ---
-function handleFollow() { /* ... your existing follow logic ... */ }
-function getCSRFToken() { /* ... your existing CSRF token logic ... */ }
+    const followBtn = document.querySelector('#follow-btn');
+    const action = followBtn.dataset.action;
+
+    fetch('/edit-profile', {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken() 
+        },
+        body: JSON.stringify({
+            follow: action === 'follow',
+            following: profile_name
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            updateFollowUI(); // This function updates the button's appearance
+        } else {
+            alert('Something went wrong. Please try again.');
+        }
+    });
+}
+
+/**
+ * Updates the Follow/Following button and follower count without reloading.
+ */
+function updateFollowUI() {
+    const followBtn = document.querySelector('#follow-btn');
+    const followerCountSpan = document.querySelector('#follower-count');
+    let currentFollowers = parseInt(followerCountSpan.innerText);
+
+    if (followBtn.dataset.action === 'follow') {
+        followBtn.innerText = 'Following';
+        followBtn.className = 'btn btn-outline-primary';
+        followBtn.dataset.action = 'unfollow';
+        followerCountSpan.innerText = currentFollowers + 1;
+    } else {
+        followBtn.innerText = 'Follow';
+        followBtn.className = 'btn btn-primary';
+        followBtn.dataset.action = 'follow';
+        followerCountSpan.innerText = currentFollowers - 1;
+    }
+}
+
+/**
+ * Gets the CSRF token from cookies.
+ */
+function getCSRFToken() {
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+            return decodeURIComponent(cookie.substring(name.length + 1));
+        }
+    }
+    return '';
+}

@@ -158,7 +158,7 @@ def update_profile(request):
                 "name": f"{request.user.first_name} {request.user.last_name}".strip(),
                 "username": request.user.username,
                 "bio": request.user.bio,
-                "profile_picture_url": request.user.profile_picture.url if request.user.profile_picture else None
+                "profile_picture_url": request.user.profile_picture_url,
             })
         else:
             return JsonResponse({"success": False, "errors": form.errors})
