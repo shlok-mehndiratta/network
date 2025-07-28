@@ -1,6 +1,8 @@
 {% extends "network/layout.html" %}
 {% load static %}
 
+{% block title %}{{ profileuser.first_name }} {% endblock %}
+
 {% block script %}
     <script src="{% static 'network/js/profile.js' %}"></script>
     <script>
@@ -79,7 +81,26 @@
             <div class="modal-body">
                 <form id="edit-profile-form" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                    {{ form.as_p }}
+
+                    <div class="text-center mb-4" id="profile-pic-editor">
+                        <img src="{{ profileuser.profile_picture_url }}" class="profile-pic-preview" alt="Profile preview">
+                        <div class="mt-2">
+                            <button type="button" id="change-pic-btn" class="btn btn-sm btn-outline-secondary">Change Photo</button>
+                            <button type="button" id="remove-pic-btn" class="btn btn-sm btn-outline-danger">Remove</button>
+                        </div>
+                    </div>
+                    <div class="d-none">
+                        {{ form.profile_picture }}
+                    </div>
+
+                    {% for field in form %}
+                        {% if field.name != 'profile_picture' %}
+                            <p>{{ field.label_tag }} {{ field }}</p>
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block">{{ field.errors.as_text }}</div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
                 </form>
             </div>
             <div class="modal-footer">

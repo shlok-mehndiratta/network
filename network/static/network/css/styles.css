@@ -50,3 +50,11 @@
   height: 100%;
   object-fit: cover;    /* Fill the container, crop if needed, no distortion */
 }
+
+.profile-pic-preview {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #ddd;
+}

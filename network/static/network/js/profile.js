@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
             handleProfileUpdate(editForm, saveButton);
         });
     }
+
+    setupProfilePicEditor();
     
     // Initial call to load posts
     view_posts(profile_name, 1);
@@ -165,4 +167,62 @@ function getCSRFToken() {
         }
     }
     return '';
+}
+
+
+/**
+ * Sets up the interactive profile picture editor in the modal.
+ */
+function setupProfilePicEditor() {
+    // The hidden inputs Django rendered
+    const realFileInput = document.querySelector('#id_profile_picture');
+    const clearCheckbox = document.querySelector('#profile_picture-clear_id');
+
+    // Our custom UI elements
+    const changeBtn = document.querySelector('#change-pic-btn');
+    const removeBtn = document.querySelector('#remove-pic-btn');
+    const previewImage = document.querySelector('.profile-pic-preview');
+
+    // If these elements don't exist on the page, do nothing
+    if (!realFileInput || !changeBtn || !removeBtn || !previewImage) {
+        return;
+    }
+
+    // When the user clicks our "Change Photo" button, trigger the hidden file input
+    changeBtn.addEventListener('click', () => {
+        realFileInput.click();
+    });
+
+    
+
+    // When the user clicks "Remove", check the hidden "clear" checkbox
+    // and update the preview to the default image.
+    removeBtn.addEventListener('click', () => {
+        if (clearCheckbox) {
+            clearCheckbox.checked = true;
+        }
+        realFileInput.value = null; // Clear any selected file
+
+        previewImage.src = '/media/default.jpg'; 
+    });
+    
+
+    // When a new file is selected in the hidden input, show a live preview
+    realFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            // Use FileReader to get the image data
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                // Update the preview image src to show the new image
+                previewImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Uncheck the "clear" box if it was checked
+            if (clearCheckbox) {
+                clearCheckbox.checked = false;
+            }
+        }
+    });
 }
