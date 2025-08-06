@@ -91,3 +91,22 @@ class Post(models.Model):
 
             
         }
+    
+class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on post {self.post.id}"
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "username": self.user.username,
+            "name": self.user.first_name,
+            "profile_picture_url": self.user.profile_picture_url,
+            "content": self.content,
+            "timestamp": self.timestamp.strftime("%b %d, %Y, %I:%M %p"),
+        }
