@@ -5,7 +5,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Post
+from .models import User, Post, Comment
 from django.db.models import F
 import json
 from .forms import ProfileForm
@@ -224,3 +224,27 @@ def edit_post(request, post_id):
         }, status=200)
 
     return JsonResponse({"error": "No valid action specified."}, status=400)
+
+
+@login_required
+def handle_comments(request, post_id):
+    try:
+        post = Post.objects.get(pk=post_id)
+    except Post.DoesNotExist:
+        return JsonResponse({"error": "Post not found."}, status=404)
+
+    # If GET request, fetch all comments for the post
+    if request.method == "GET":
+        comments = post.comments.all().order_by("-timestamp")
+        return JsonResponse([comment.serialize() for comment in comments], safe=False)
+
+    # If POST request, add a new comment
+    if request.method == "POST":
+        data = json.loads(request.body)
+        content = data.get("content", "")
+
+        if not content:
+            return JsonResponse({"error": "Comment content cannot be empty."}, status=400)
+
+        comment = Comment.objects.create(user=request.user, post=post, content=content)
+        return JsonResponse(comment.serialize(), status=201)
