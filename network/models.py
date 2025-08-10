@@ -88,8 +88,7 @@ class Post(models.Model):
             # Correctly checks if the current_user (who is Browse) has liked this post
             "liked_by_user": current_user in self.likes.all() if current_user and current_user.is_authenticated else False,
             "profile_picture_url": self.user.profile_picture_url,
-
-            
+            "comments_count": self.comments.count(),            
         }
     
 class Comment(models.Model):
